@@ -1,109 +1,115 @@
-import { StyleSheet, Image, Platform } from 'react-native';
-
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
+import { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, Alert, TouchableOpacity } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function TabTwoScreen() {
+  const [timer, setTimer] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [duration, setDuration] = useState('');
+
+  useEffect(() => {
+    let timerInterval;
+    if (isRunning) {
+      timerInterval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev >= Number(duration)) {
+            clearInterval(timerInterval);
+            setIsRunning(false);
+            Alert.alert("Time's up!", "The timer has finished.");
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      clearInterval(timerInterval);
+    }
+
+    return () => clearInterval(timerInterval);
+  }, [isRunning, duration]);
+
+  const resetTimer = () => {
+    setTimer(0);
+    setIsRunning(false);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <ParallaxScrollView headerBackgroundColor={{ light: '#00AEEF', dark: '#005F9E' }}>
+
+      <View style={styles.container}>
+        <TextInput
+          style={styles.input}
+          placeholder="Set duration (in seconds)"
+          placeholderTextColor="#ADD8E6"
+          keyboardType="numeric"
+          value={duration}
+          onChangeText={setDuration}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
+        <Text style={styles.timerText}>{timer}s</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, isRunning ? styles.buttonPause : styles.buttonStart]} onPress={() => setIsRunning(!isRunning)} disabled={!duration}>
+            <Text style={styles.buttonText}>{isRunning ? 'Pause' : 'Start'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={resetTimer}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    padding: 16,
+    backgroundColor: '#1E90FF',
+    borderRadius: 12,
+    margin: 20,
   },
-  titleContainer: {
+  input: {
+    borderWidth: 1,
+    borderColor: '#ADD8E6',
+    borderRadius: 8,
+    padding: 12,
+    width: '80%',
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'white',
+    backgroundColor: '#4682B4',
+  },
+  timerText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  buttonContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
+    marginTop: 20,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonStart: {
+    backgroundColor: '#00BFFF',
+  },
+  buttonPause: {
+    backgroundColor: '#FFD700',
+  },
+  buttonReset: {
+    backgroundColor: '#DC143C',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

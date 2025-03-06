@@ -1,74 +1,100 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const [timer, setTimer] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    const clockInterval = setInterval(() => {
+      setTime(new Date().toLocaleTimeString());
+    }, 1000);
+
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  useEffect(() => {
+    let timerInterval;
+    if (isRunning) {
+      timerInterval = setInterval(() => {
+        setTimer((prev) => prev + 1);
+      }, 1000);
+    } else {
+      clearInterval(timerInterval);
+    }
+
+    return () => clearInterval(timerInterval);
+  }, [isRunning]);
+
+  const resetTimer = () => {
+    setTimer(0);
+    setIsRunning(false);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+    <ParallaxScrollView headerBackgroundColor={{ light: '#00AEEF', dark: '#005F9E' }}>
+      <View style={styles.container}>
+        <Text style={styles.clock}>Current Time: {time}</Text>
+        <Text style={styles.timer}>Timer: {timer}s</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, isRunning ? styles.buttonPause : styles.buttonStart]} onPress={() => setIsRunning(!isRunning)}>
+            <Text style={styles.buttonText}>{isRunning ? 'Pause' : 'Start'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.buttonReset]} onPress={resetTimer}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 16,
+    padding: 16,
+    backgroundColor: '#1E90FF',
+    borderRadius: 12,
+    margin: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  clock: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  timer: {
+    fontSize: 20,
+    color: 'white',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonStart: {
+    backgroundColor: '#00BFFF',
+  },
+  buttonPause: {
+    backgroundColor: '#FFD700',
+  },
+  buttonReset: {
+    backgroundColor: '#DC143C',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
